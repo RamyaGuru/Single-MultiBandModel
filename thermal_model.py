@@ -211,7 +211,5 @@ def fit_grun(gamma, data_df, c):
     return grun
     
 
-    
-
-    
+        
     
