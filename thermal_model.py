@@ -39,14 +39,14 @@ def v_sound(v_l, v_t):
     v_s = ((1 / (3 * v_l**3)) + (2 / (3 * v_t**3)))**(-1/3)
     return v_s
 
-def debyeT(vs):
+def debyeT(atmV, vs):
     return (hbar /kB) * (6*pi / atmV)**(1/3) * vs
 
 vs = v_sound(v_l, v_t)
 
-debyeT = debyeT(vs)
+dT = debyeT(atmV, vs)
 
-debyef = (debyeT * kB)/hbar
+debyef = (dT * kB)/hbar
 
 '''
 Original Masses

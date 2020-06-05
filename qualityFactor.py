@@ -57,7 +57,8 @@ band_gap = np.array([0.04, -0.1])
 red_bgap = (band_gap * e) / (kB * T)
 
 '''
-Single Parabolic Band Model
+Single Parabolic Band Model:
+    Relationships between transport coefficients and doping level (Fermi level)
 '''
 
 def carr_conc_from_eta(eta, mstar, T=300):
@@ -87,7 +88,7 @@ def zT(eta, B):
     return S**2 / (((kB / e)**2 / (B * np.log(1 + np.exp(eta)))) + L)
 
 '''
-Two Band Model
+Two Band Model (EXTEND TO ARBITRARY NUMBER OF BANDS)
 '''
 
 
@@ -141,7 +142,8 @@ def twobandzT(eta_n, eta_p, sigmae01, sigmae02, kL, T):
     return seebeck**2 * cond * T / kappa
 
 '''
-Convert between carrier concentration and dopant concentration 
+Convert between carrier concentration and dopant concentration assuming 100%
+doping efficiency
 '''
     
 
