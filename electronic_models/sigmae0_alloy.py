@@ -31,8 +31,13 @@ from bandstructure_mm_mod import BandFeaturizer
 import ternary
 from scipy.optimize import curve_fit
 import csv
+from fdint import fdk
+import qualityFactor as qf
+from scipy.optimize import minimize
 
 mpl.rcParams['font.size'] = 12
+
+mpl.rcParams['figure.figsize'] = [6.4,4.8] 
 
 project = 'carrier_transport'
 
@@ -46,6 +51,32 @@ m_e = 9.109e-31
 hbar = 1.045e-34
 kb = 1.38e-23
 
+def conductivity_from_sige0(S, sigmae0):
+    A = np.abs(S) / (kb / e)
+    cond = sigmae0 / ((np.exp(A - 2) / (1 + np.exp(-5 * (A - 1)))) +\
+                     ((3 * A / math.pi**2) / (1 + np.exp(5 * (A - 1)))))
+    return cond
+
+def fit_sigmae0(datafile, p0 = 1e6):
+    '''
+    Instead of using Jeff's formula.. fit using the Fermi itnegrals
+    '''
+    data_df = pd.read_csv(datafile)
+    grps = data_df.groupby(by = [data_df.columns[1], data_df.columns[2]])
+    split_comp = [grps.get_group(x) for x in grps.groups]
+    sig_df_list = []
+    for data in split_comp:
+        sig = data['Sigma (S/m)']
+        S = data['S (V/K)']
+        sigmaE0, cov = curve_fit(lambda s, sigmaE0 : conductivity_from_sige0(s, sigmaE0), S, sig,\
+                            p0 = p0, bounds = (0.1, np.inf), method = 'dogbox')
+        
+#    sigmae0 = sig * ((np.exp(A - 2) / (1 + np.exp(-5 * (A - 1)))) +\
+#                     ((3 * A / math.pi**2) / (1 + np.exp(5 * (A - 1)))))
+        data['Sigma_E0'] = np.ones(len(sig)) * sigmaE0
+        sig_df_list.append(data)
+    return sig_df_list
+
 
 def fetch_sigmae0_dataframe(datafile):
     sigmae0_df = pd.read_csv(datafile)
@@ -56,7 +87,9 @@ def fetch_endmember_values(sig_df):
     col_list = list(sig_df.columns)
     col_list.pop(0)
     col_list.remove('Sigma_E0')
+    print(sig_df.loc[sig_df[col_list[0]] > 9.99e-01]['Sigma_E0'])
     x_value = float(sig_df.loc[sig_df[col_list[0]] > 9.99e-01]['Sigma_E0'])
+    print(sig_df.loc[sig_df[col_list[1]] > 9.99e-01]['Sigma_E0'])
     y_value = float(sig_df.loc[sig_df[col_list[1]] > 9.99e-01]['Sigma_E0'])
     z_value = float(sig_df.loc[sig_df[col_list[2]] > 9.99e-01]['Sigma_E0'])
     return [x_value, y_value, z_value]
@@ -175,8 +208,10 @@ def sigma_e0_model(c: [list], U, mat_props, dpg, T = 300):
     return sigmae0
 
 def fit_U(data_df, X_key, Y_key, mat_props, dpg, T = 300, p0 = 0):
-    Tt_X = np.array([data_df[X_key][i]  for i in  list(data_df.index)])
-    Tt_Y = np.array([data_df[Y_key][i]  for i in  list(data_df.index)])
+#    Tt_X = np.array([data_df[X_key][i]  for i in  list(data_df.index)])
+#    Tt_Y = np.array([data_df[Y_key][i]  for i in  list(data_df.index)])
+    Tt_X = np.array(data_df[X_key])
+    Tt_Y = np.array(data_df[Y_key])
     Tt = (Tt_X, Tt_Y)
     print(Tt)
     At = list(data_df['Sigma_E0'])
@@ -235,7 +270,8 @@ if __name__ == '__main__':
     data_path = '/Users/ramyagurunathan/Documents/PhDProjects/Argonne_TECCA/SigmaE0_values/'
     datafile = data_path + 'XNiSn_gauss_data_purple.csv'
     sigmae0_df = fetch_sigmae0_dataframe(datafile)
-    #Drop Multiphase
+    #Drop the band convergence sample
+    sigmae0_df = sigmae0_df.drop(66)
     x_val, y_val, z_val = fetch_endmember_values(sigmae0_df)
     '''
     Initalize Endmember Properties
@@ -288,6 +324,8 @@ if __name__ == '__main__':
 
 #Sigmae0
     sigmae0 = sigma_e0_model([0.1, 0.2], 1, mat_props, 'n')
+
+#%%
 
     '''
     Print ternary
@@ -390,4 +428,23 @@ if __name__ == '__main__':
     tax.top_corner_label('TiNiSn')
     tax.left_corner_label('ZrNiSn', position = (0,0.04, 0))
     tax.right_corner_label('HfNiSn', position = (0.95,0.04, 0))
+    #%%
             
+    '''
+    Sigma_e0 from Seebeck and conductivity
+    '''
+    
+    new_datafile = data_path + 'XNiSn_S_and_sigma.csv'
+    sige0 = fit_sigmae0(new_datafile)
+    
+    '''
+    Jonker Plots
+    '''
+    for data in sige0:
+        plt.figure()
+        plt.scatter(data['Sigma (S/m)'], data['S (V/K)'] * 1e6)
+        cond = conductivity_from_sige0(data['S (V/K)'], data['Sigma_E0'])
+        plt.scatter(cond, data['S (V/K)'] * 1e6)
+    
+    
+    
