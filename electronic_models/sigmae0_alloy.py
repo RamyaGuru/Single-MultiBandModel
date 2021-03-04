@@ -87,9 +87,9 @@ def fetch_endmember_values(sig_df):
     col_list = list(sig_df.columns)
     col_list.pop(0)
     col_list.remove('Sigma_E0')
-    print(sig_df.loc[sig_df[col_list[0]] > 9.99e-01]['Sigma_E0'])
+#    print(sig_df.loc[sig_df[col_list[0]] > 9.99e-01]['Sigma_E0'])
     x_value = float(sig_df.loc[sig_df[col_list[0]] > 9.99e-01]['Sigma_E0'])
-    print(sig_df.loc[sig_df[col_list[1]] > 9.99e-01]['Sigma_E0'])
+#    print(sig_df.loc[sig_df[col_list[1]] > 9.99e-01]['Sigma_E0'])
     y_value = float(sig_df.loc[sig_df[col_list[1]] > 9.99e-01]['Sigma_E0'])
     z_value = float(sig_df.loc[sig_df[col_list[2]] > 9.99e-01]['Sigma_E0'])
     return [x_value, y_value, z_value]
@@ -173,11 +173,46 @@ def fit_sigma_e0_coefficient(sigma_e0_data, mat_props, dpg_type, T = 300):
         A = s_e0_exp / ((2 * hbar * mat_props['BulkMod'][n] * mat_props['Nv'][n][dpg_type] * e**2)/\
         (3 * math.pi * mat_props['eff_mass_{}'.format(dpg_type)][n] * m_e * e**2))
         coeff.append(A)
-    print(coeff)
     mat_props['coeff_{}'.format(dpg_type)] = coeff 
     return mat_props
+
+def binary_sigma_e0_model(c, U, defect, host, mat_props, dpg, T = 300):
+    '''
+    Use Vegard's law for the coefficients, mat_props.
+    Otherwise just use the sigma_e0 model?
     
-def sigma_e0_model(c: [list], U, mat_props, dpg, T = 300):
+    We'll call ZrNiSn the host
+    And HfNiSn + TiNiSn the defects
+    '''
+    m_eff = mat_props['eff_mass_{}'.format(dpg)][defect] * c +\
+    mat_props['eff_mass_{}'.format(dpg)][defect] * (1-c)
+    
+    Cl = mat_props['BulkMod'][defect] * c + mat_props['BulkMod'][host] * (1-c)
+    
+    coeff = mat_props['coeff_{}'.format(dpg)][defect] * c + mat_props['coeff_{}'.format(dpg)][host] * (1-c)
+    
+    AtmV = mat_props['AtmV'][defect] * c + mat_props['AtmV'][host] * (1-c)
+    
+    Nv = mat_props['Nv'][2][dpg]
+    #Need to figure out what's going on with A factor
+    sigmae0 = (2 * hbar * Cl * Nv * e**2 * coeff) / (3 * math.pi * m_eff * m_e * e**2 *\
+               (1 + U * (3 * math.pi**2 * c * (1-c) * Cl * AtmV)/\
+                (8 * kb * T)))
+    return sigmae0   
+
+def binary_sigma_e0_endpts(c, U, defect, host, mat_props, dpg, T = 300):
+    sigmae0_vegard = mat_props['sigma_endpts'][defect] * c +\
+    mat_props['sigma_endpts'][host] * (1-c)
+    
+    Cl = mat_props['BulkMod'][defect] * c + mat_props['BulkMod'][host] * (1-c)
+    
+    AtmV = mat_props['AtmV'][defect] * c + mat_props['AtmV'][host] * (1-c)
+    
+    A = (3 * math.pi**2 * c * (1-c) * Cl * AtmV) / (8 * kb * T)
+    sigma_e0 = sigmae0_vegard * (1 / (1 + A * U))
+    return sigma_e0
+    
+def sigma_e0_model(c: list, U, mat_props, dpg, T = 300):
     '''
     Use Vegard's law for the coefficients, mat_props.
     Otherwise just use the sigma_e0 model?
@@ -207,13 +242,26 @@ def sigma_e0_model(c: [list], U, mat_props, dpg, T = 300):
                 (8 * kb * T)))
     return sigmae0
 
+def fit_binary_U(data_df, D_key, defect, host, mat_props, dpg, T = 300, p0 = 0):
+    Tt = np.array(data_df[D_key])
+    At = list(data_df['Sigma_E0'])
+    U, cov = curve_fit(lambda C, U: binary_sigma_e0_model(C, U, defect, host, mat_props, dpg, T), Tt, At,\
+                       p0 = p0, bounds = (0,np.inf), method = 'dogbox')
+    return U[0], cov 
+
+def fit_binary_U_endpts(data_df, D_key, defect, host, mat_props, dpg, T = 300, p0 = 0):
+    Tt = np.array(data_df[D_key])
+    At = list(data_df['Sigma_E0'])
+    U, cov = curve_fit(lambda C, U: binary_sigma_e0_model(C, U, defect, host, mat_props, dpg, T), Tt, At,\
+                       p0 = p0, bounds = (0,np.inf), method = 'dogbox')
+    return U[0], cov
+
 def fit_U(data_df, X_key, Y_key, mat_props, dpg, T = 300, p0 = 0):
 #    Tt_X = np.array([data_df[X_key][i]  for i in  list(data_df.index)])
 #    Tt_Y = np.array([data_df[Y_key][i]  for i in  list(data_df.index)])
     Tt_X = np.array(data_df[X_key])
     Tt_Y = np.array(data_df[Y_key])
     Tt = (Tt_X, Tt_Y)
-    print(Tt)
     At = list(data_df['Sigma_E0'])
     U, cov = curve_fit(lambda C, U: sigma_e0_model(C, U, mat_props, dpg, T), Tt, At,\
                        p0 = p0, bounds = (0,np.inf), method = 'dogbox')
@@ -283,6 +331,7 @@ if __name__ == '__main__':
     mat_props = {'formula': ['HfNiSn', 'TiNiSn', 'ZrNiSn'], 'BulkMod': [105E9, 122E9, 152E9],\
                  'mpid': ['mp-20523', 'mp-924130', 'mp-30806'],\
                  'AtmV' : [1.91E-29, 1.755E-29, 1.93E-29]}
+    mat_props['sigma_endpts'] = [x_val, y_val, z_val]
     property_path = '/Users/ramyagurunathan/Documents/PhDProjects/Argonne_TECCA/'
     
 #    mp_entry = get_mpcontribs_entry('5f8a62d6f02214a1d07e2d2a')
