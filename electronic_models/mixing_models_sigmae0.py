@@ -45,8 +45,8 @@ def split_binary_data(sig_df):
     '''
     #Split up data for each binary system
     bin_list = []
-    for comp in sigmae0_df.columns[1:4]:
-        binary = sigmae0_df.loc[sigmae0_df[comp] == 0.0]
+    for comp in sig_df.columns[1:4]:
+        binary = sig_df.loc[sig_df[comp] == 0.0]
         bin_list.append(binary)                
     return bin_list
 
@@ -306,7 +306,7 @@ if __name__ == '__main__':
     figure, tax = ternary.figure(ax=ax, scale = 100)
     
     tax.heatmap(sig_mu_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
-         cbarlabel=r'$\sigma_{e0}$', vmin = 70000, vmax = 110000,\
+         cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01}, vmin = 70000, vmax = 110000,\
          scientific = False)
     
     Tt = [(sigmae0_df['HfNiSn'][i] * 100, sigmae0_df['TiNiSn'][i] * 100, sigmae0_df['ZrNiSn'][i] * 100) for i in  list(sigmae0_df.index)]
@@ -318,8 +318,10 @@ if __name__ == '__main__':
     tax.boundary(linewidth=2.0)
     
     tax.top_corner_label('TiNiSn')
-    tax.left_corner_label('ZrNiSn', position = (0,0.04, 0))
-    tax.right_corner_label('HfNiSn', position = (0.95,0.04, 0))
+    tax.left_corner_label('ZrNiSn', position = (0,0, 0))
+    tax.right_corner_label('HfNiSn', position = (0.95,0, 0))
+    
+    tax.savefig('XNiSn_mm_sige0_ternary.pdf', bbox_inches = 'tight')
     
     '''
     trivial U mixing result
