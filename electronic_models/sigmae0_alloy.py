@@ -211,6 +211,21 @@ def binary_sigma_e0_endpts(c, U, defect, host, mat_props, dpg, T = 300):
     A = (3 * math.pi**2 * c * (1-c) * Cl * AtmV) / (8 * kb * T)
     sigma_e0 = sigmae0_vegard * (1 / (1 + A * U))
     return sigma_e0
+
+#def binary_resistivity_model(c, U, defect, host, mat_props, dpg, T = 300):
+#    rho_e0_vegard = (1 / mat_props['sigma_endpts'][defect]) * c +\
+#    (1 / mat_props['sigma_endpts'][host]) * (1-c)
+#    
+#    Cl = mat_props['BulkMod'][defect] * c + mat_props['BulkMod'][host] * (1-c)
+#    
+#    AtmV = mat_props['AtmV'][defect] * c + mat_props['AtmV'][host] * (1-c)
+#    
+#    A = (3 * math.pi**2 * c * (1-c) * Cl * AtmV) / (8 * kb * T)    
+#    
+#    rho_e0 = rho_e0_vegard * (1 + A * U)
+#    
+#    sigmae0 = 
+#    return rho
     
 def sigma_e0_model(c: list, U, mat_props, dpg, T = 300):
     '''
@@ -242,12 +257,12 @@ def sigma_e0_model(c: list, U, mat_props, dpg, T = 300):
                 (8 * kb * T)))
     return sigmae0
 
-def fit_binary_U(data_df, D_key, defect, host, mat_props, dpg, T = 300, p0 = 0):
-    Tt = np.array(data_df[D_key])
-    At = list(data_df['Sigma_E0'])
-    U, cov = curve_fit(lambda C, U: binary_sigma_e0_model(C, U, defect, host, mat_props, dpg, T), Tt, At,\
-                       p0 = p0, bounds = (0,np.inf), method = 'dogbox')
-    return U[0], cov 
+#def fit_binary_U(data_df, D_key, defect, host, mat_props, dpg, T = 300, p0 = 0):
+#    Tt = np.array(data_df[D_key])
+#    At = list(data_df['Sigma_E0'])
+#    U, cov = curve_fit(lambda C, U: binary_sigma_e0_model(C, U, defect, host, mat_props, dpg, T), Tt, At,\
+#                       p0 = p0, bounds = (0,np.inf), method = 'dogbox')
+#    return U[0], cov 
 
 def fit_binary_U_endpts(data_df, D_key, defect, host, mat_props, dpg, T = 300, p0 = 0):
     Tt = np.array(data_df[D_key])
@@ -255,6 +270,7 @@ def fit_binary_U_endpts(data_df, D_key, defect, host, mat_props, dpg, T = 300, p
     U, cov = curve_fit(lambda C, U: binary_sigma_e0_model(C, U, defect, host, mat_props, dpg, T), Tt, At,\
                        p0 = p0, bounds = (0,np.inf), method = 'dogbox')
     return U[0], cov
+
 
 def fit_U(data_df, X_key, Y_key, mat_props, dpg, T = 300, p0 = 0):
 #    Tt_X = np.array([data_df[X_key][i]  for i in  list(data_df.index)])

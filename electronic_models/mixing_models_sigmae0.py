@@ -74,6 +74,7 @@ def fit_binary_U_list(bin_list, mat_props, d_key_list =  ['TiNiSn', 'HfNiSn', 'H
     return U_list
 
 
+    
 #def trivial_U_mixing(sig_df, A_endpt, B_endpt, mat_props, dpg, c : list, T = 300):
 #    '''
 #    Calculate alloy scattering parameters using the correct average of binary U parameters?
@@ -147,8 +148,10 @@ def muggianu_model(sigmae0_df, bin_list, U_list, mat_props, dpg, c : list, T = 3
     sigma_tern = (sig3 * comp_coeff[2] + sig2 * comp_coeff[1] + sig1 * comp_coeff[0])
     return sigma_tern
 
-def muggianu_model_sig_diff(sigmae0_df, A_endpt, B_endpt, mat_props, dpg, c : list, T = 300):
+def muggianu_model_sig_diff(sigmae0_df, bin_list, U_list, mat_props, dpg, c : list, T = 300):
     '''
+    Calculate excess sigma_e0 term by substracting off the Vegard's law value
+
     Inputs:
         c : array of molar fractions (i,j) k = 1-i-j
         U : array of pairwise alloy scattering U coefficients
@@ -158,26 +161,26 @@ def muggianu_model_sig_diff(sigmae0_df, A_endpt, B_endpt, mat_props, dpg, c : li
     based on the geometry of the Muggianu diagram
     U_list = [B-C, A-C, A-B]
     '''
-    bin_list = split_binary_data(sigmae0_df)
-    U_list = fit_binary_U(bin_list, A_endpt, B_endpt)
     sigma_endpts = sig.fetch_endmember_values(sigmae0_df)
     c.append((1 + 1e-10) - sum(c))
     bin3 = [((1 + c[0] - c[1]) / 2) , ((1 + c[1] - c[0]) / 2)]
     bin2 = [((1 + c[0] - c[2]) / 2) , ((1 + c[2] - c[0]) / 2)]
     bin1 = [((1 + c[1] - c[2]) / 2) , ((1 + c[2] - c[1]) / 2)]
-    sig3 = (bin3[0] * sigma_endpts[0] + bin3[1] * sigma_endpts[1]) -\
-    sig.binary_sigma_e0_model(bin3, U_list[2], mat_props, dpg, T)
-    sig2 = (bin2[0] * sigma_endpts[0] + bin2[1] * sigma_endpts[2]) -\
-        sig.binary_sigma_e0_model(bin2, U_list[1], mat_props, dpg, T)
-    sig1 = (bin1[0] * sigma_endpts[1] + bin1[1] * sigma_endpts[2]) -\
-        sig.sigma_e0_model(bin1, U_list[0], mat_props, dpg, T) 
+    excess3 = -1 * (bin3[0] * (1/ sigma_endpts[0]) + bin3[1] * (1/sigma_endpts[1])) +\
+    (1/ sig.binary_sigma_e0_endpts(bin3[0], U_list[2], 0, 1, mat_props, dpg, T))
+    excess2 = -1 * (bin2[0] * (1/ sigma_endpts[0]) + bin2[1] * (1/ sigma_endpts[2])) +\
+        (1/ sig.binary_sigma_e0_endpts(bin2[0], U_list[1], 0, 2, mat_props, dpg, T))
+    excess1 = -1 * (bin1[0] * (1/ sigma_endpts[1]) + bin1[1] * (1/ sigma_endpts[2])) +\
+        (1/ sig.binary_sigma_e0_endpts(bin1[0], U_list[0], 1, 2, mat_props, dpg, T))
+
     comp_coeff = []
     for j,k in zip([1,0,0],[2,2,1]):
         comp_coeff.append((4 * c[j] * c[k]) / ((1 + c[j] - c[k]) * (1 + c[k] - c[j])))
-    sigma_excess = (sig3 * comp_coeff[2] + sig2 * comp_coeff[1] + sig1 * comp_coeff[0])
-    sigma_vegard = sum([conc * sig for conc, sig in zip(c, sigma_endpts)])
-    sigma_final = sigma_vegard - sigma_tern
-    return sigma_final
+    rho_excess = (excess3 * comp_coeff[2] + excess2 * comp_coeff[1] + excess1 * comp_coeff[0])
+    rho_vegard = sum([conc * 1/sig for conc, sig in zip(c, sigma_endpts)])
+    rho_final = rho_vegard + rho_excess
+
+    return (1 / rho_final)
 
 def muggianu_model_redo(sigmae0_df, bin_list, U_list, mat_props, dpg, c : list, T = 300):
     c.append((1 + 1e-10) - sum(c))
@@ -199,7 +202,7 @@ def run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, dpg, T = 
     for c in np.arange(first,1, (last - first) / n):
         k = 0
         for d in np.arange(first, 1 - c, (last - first) / n):
-            sig_tern[(c*100,d*100)] = muggianu_model(sigmae0_df, bin_list, U_list,\
+            sig_tern[(c*100,d*100)] = muggianu_model_sig_diff(sigmae0_df, bin_list, U_list,\
                      mat_props, dpg, [c,d], T)
             k = k+1
         j = j+1
