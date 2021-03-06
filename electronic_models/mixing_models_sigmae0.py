@@ -180,7 +180,7 @@ def muggianu_model_sig_diff(sigmae0_df, bin_list, U_list, mat_props, dpg, c : li
     rho_vegard = sum([conc * 1/sig for conc, sig in zip(c, sigma_endpts)])
     rho_final = rho_vegard + rho_excess
 
-    return (1 / rho_final)
+    return rho_excess, (1 / rho_final)
 
 def muggianu_model_redo(sigmae0_df, bin_list, U_list, mat_props, dpg, c : list, T = 300):
     c.append((1 + 1e-10) - sum(c))
@@ -195,6 +195,7 @@ def muggianu_model_redo(sigmae0_df, bin_list, U_list, mat_props, dpg, c : list, 
     return sigma_tern
 
 def run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, dpg, T = 300, n = 100):
+    rho_excess = dict()
     sig_tern = dict()
     first = 1e-10
     last = 9.9999999999999e-1
@@ -202,11 +203,11 @@ def run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, dpg, T = 
     for c in np.arange(first,1, (last - first) / n):
         k = 0
         for d in np.arange(first, 1 - c, (last - first) / n):
-            sig_tern[(c*100,d*100)] = muggianu_model_sig_diff(sigmae0_df, bin_list, U_list,\
+            rho_excess[(c*100, d*100)], sig_tern[(c*100,d*100)] = muggianu_model_sig_diff(sigmae0_df, bin_list, U_list,\
                      mat_props, dpg, [c,d], T)
             k = k+1
         j = j+1
-    return sig_tern  
+    return rho_excess, sig_tern  
 
 
 if __name__ == '__main__':
@@ -303,7 +304,7 @@ if __name__ == '__main__':
     Plot ternary for muggianu result
     '''
     sig_data_dict = convert_data_df_to_dict(sigmae0_df, 'HfNiSn', 'TiNiSn')
-    sig_mu_dict = run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, 'n', T = 300, n = 100)
+    rho_excess_mu, sig_mu_dict = run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, 'n', T = 300, n = 100)
     fig, ax = plt.subplots()
     ax.axis("off")
     figure, tax = ternary.figure(ax=ax, scale = 100)
@@ -324,7 +325,22 @@ if __name__ == '__main__':
     tax.left_corner_label('ZrNiSn', position = (0,0, 0))
     tax.right_corner_label('HfNiSn', position = (0.95,0, 0))
     
-    tax.savefig('XNiSn_mm_sige0_ternary.pdf', bbox_inches = 'tight')
+#    tax.savefig('XNiSn_mm_sige0_ternary.pdf', bbox_inches = 'tight')
+
+    fig2, ax2 = plt.subplots()
+
+    ax2.axis("off")
+    figure2, tax2 = ternary.figure(ax=ax2, scale = 100)
+    
+    tax2.heatmap(rho_excess_mu, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
+         cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01},\
+         scientific = False)  
+    
+    tax2.boundary(linewidth=2.0)
+    
+    tax2.top_corner_label('TiNiSn')
+    tax2.left_corner_label('ZrNiSn', position = (0,0, 0))
+    tax2.right_corner_label('HfNiSn', position = (0.95,0, 0))
     
     '''
     trivial U mixing result
