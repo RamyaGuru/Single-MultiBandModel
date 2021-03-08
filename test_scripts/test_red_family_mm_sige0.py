@@ -7,7 +7,8 @@ Created on Wed Mar  3 21:17:52 2021
 
 Test sigma_e0 mixing model Red Family
 """
-
+import sys
+sys.path.append('../electronic_models/')
 import mixing_models_sigmae0 as mms
 import sigmae0_alloy as sig
 import matplotlib.pyplot as plt
@@ -46,6 +47,9 @@ Fit coefficients
 mat_props = sig.fit_sigma_e0_coefficient([x_val, y_val, z_val], mat_props, 'n', T = 300)
 
 mat_props['sigma_endpts'] = [x_val, y_val, z_val]
+
+#Fuckin around
+#mat_props['sigma_endpts'] = [150000, 150000, 150000]
 
 '''
 Split into binary data
@@ -101,19 +105,19 @@ sig_mu_Hf = mms.muggianu_model(sigmae0_df, bin_list, U_list, mat_props, 'n', c_T
 Plot ternary for muggianu result
 '''
 sig_data_dict = mms.convert_data_df_to_dict(sigmae0_df, 'TaFeSb', 'VFeSb')
-sig_mu_dict = mms.run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, 'n', T = 300, n = 100)
+rho_excess_dict, sig_mu_dict = mms.run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, 'n', T = 300, n = 100)
 fig, ax = plt.subplots()
 ax.axis("off")
 figure, tax = ternary.figure(ax=ax, scale = 100)
 
 tax.heatmap(sig_mu_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
-     cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01}, vmin = 25000, vmax = 125000,\
+     cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01}, vmin = 25000, vmax = 150000,\
      scientific = False)
 
 Tt = [(sigmae0_df['TaFeSb'][i] * 100, sigmae0_df['VFeSb'][i] * 100, sigmae0_df['NbFeSb'][i] * 100) for i in  list(sigmae0_df.index)]
 At = sigmae0_df['Sigma_E0']
 tax.scatter(Tt, c = list(At), colormap=plt.cm.get_cmap('Spectral_r', 20),\
-     cmap=plt.cm.get_cmap('Spectral_r', 20), vmin = 25000, vmax = 125000,\
+     cmap=plt.cm.get_cmap('Spectral_r', 20), vmin = 25000, vmax = 150000,\
      scientific = False, s = 30, edgecolors = 'k', zorder = 10, clip_on = False)
 
 tax.boundary(linewidth=2.0)
@@ -124,5 +128,18 @@ tax.right_corner_label('TaFeSb', position = (0.95,0, 0))
 
 tax.savefig('XFeSB_mm_sige0_ternary.pdf', bbox_inches = 'tight')
 
+fig2, ax2 = plt.subplots()
+figure, tax = ternary.figure(ax=ax2, scale = 100)
+ax2.axis("off")
+tax.heatmap(rho_excess_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
+     cbarlabel=r'excess $\rho_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01},\
+     scientific = False)
 
+Tt = [(sigmae0_df['TaFeSb'][i] * 100, sigmae0_df['VFeSb'][i] * 100, sigmae0_df['NbFeSb'][i] * 100) for i in  list(sigmae0_df.index)]
+At = sigmae0_df['Sigma_E0']
 
+tax.boundary(linewidth=2.0)
+
+tax.top_corner_label('VFeSb')
+tax.left_corner_label('NbFeSb', position = (0,0., 0))
+tax.right_corner_label('TaFeSb', position = (0.95,0, 0))

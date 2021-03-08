@@ -166,20 +166,21 @@ def muggianu_model_sig_diff(sigmae0_df, bin_list, U_list, mat_props, dpg, c : li
     bin3 = [((1 + c[0] - c[1]) / 2) , ((1 + c[1] - c[0]) / 2)]
     bin2 = [((1 + c[0] - c[2]) / 2) , ((1 + c[2] - c[0]) / 2)]
     bin1 = [((1 + c[1] - c[2]) / 2) , ((1 + c[2] - c[1]) / 2)]
-    excess3 = -1 * (bin3[0] * (1/ sigma_endpts[0]) + bin3[1] * (1/sigma_endpts[1])) +\
-    (1/ sig.binary_sigma_e0_endpts(bin3[0], U_list[2], 0, 1, mat_props, dpg, T))
-    excess2 = -1 * (bin2[0] * (1/ sigma_endpts[0]) + bin2[1] * (1/ sigma_endpts[2])) +\
-        (1/ sig.binary_sigma_e0_endpts(bin2[0], U_list[1], 0, 2, mat_props, dpg, T))
-    excess1 = -1 * (bin1[0] * (1/ sigma_endpts[1]) + bin1[1] * (1/ sigma_endpts[2])) +\
-        (1/ sig.binary_sigma_e0_endpts(bin1[0], U_list[0], 1, 2, mat_props, dpg, T))
-
+#    excess3 = (-1 / (bin3[0] * (sigma_endpts[0]) + bin3[1] * (sigma_endpts[1]))) +\
+#    (1/ sig.binary_sigma_e0_endpts(bin3[0], U_list[2], 0, 1, mat_props, dpg, T))
+#    excess2 = (-1 / (bin2[0] * (1/ sigma_endpts[0]) + bin2[1] * (1/ sigma_endpts[2]))) +\
+#        (1/ sig.binary_sigma_e0_endpts(bin2[0], U_list[1], 0, 2, mat_props, dpg, T))
+#    excess1 = (-1 / (bin1[0] * (1/ sigma_endpts[1]) + bin1[1] * (1/ sigma_endpts[2]))) +\
+#        (1/ sig.binary_sigma_e0_endpts(bin1[0], U_list[0], 1, 2, mat_props, dpg, T))
+    excess3 = (1/ sig.binary_exc_sigma_e0_endpts(bin3[0], U_list[2], 0, 1, mat_props, dpg, T))
+    excess2 = (1/ sig.binary_exc_sigma_e0_endpts(bin2[0], U_list[1], 0, 2, mat_props, dpg, T))
+    excess1 = (1/ sig.binary_exc_sigma_e0_endpts(bin1[0], U_list[0], 1, 2, mat_props, dpg, T))
     comp_coeff = []
     for j,k in zip([1,0,0],[2,2,1]):
         comp_coeff.append((4 * c[j] * c[k]) / ((1 + c[j] - c[k]) * (1 + c[k] - c[j])))
     rho_excess = (excess3 * comp_coeff[2] + excess2 * comp_coeff[1] + excess1 * comp_coeff[0])
-    rho_vegard = sum([conc * 1/sig for conc, sig in zip(c, sigma_endpts)])
-    rho_final = rho_vegard + rho_excess
-
+    inv_sig_vegard = 1 / (sum([conc * sig for conc, sig in zip(c, sigma_endpts)]))
+    rho_final = inv_sig_vegard + rho_excess
     return rho_excess, (1 / rho_final)
 
 def muggianu_model_redo(sigmae0_df, bin_list, U_list, mat_props, dpg, c : list, T = 300):

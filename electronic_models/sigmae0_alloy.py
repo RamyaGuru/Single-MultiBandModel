@@ -212,6 +212,18 @@ def binary_sigma_e0_endpts(c, U, defect, host, mat_props, dpg, T = 300):
     sigma_e0 = sigmae0_vegard * (1 / (1 + A * U))
     return sigma_e0
 
+def binary_exc_sigma_e0_endpts(c, U, defect, host, mat_props, dpg, T = 300):
+    sigmae0_vegard = mat_props['sigma_endpts'][defect] * c +\
+    mat_props['sigma_endpts'][host] * (1-c)
+    
+    Cl = mat_props['BulkMod'][defect] * c + mat_props['BulkMod'][host] * (1-c)
+    
+    AtmV = mat_props['AtmV'][defect] * c + mat_props['AtmV'][host] * (1-c)
+    
+    A = (3 * math.pi**2 * c * (1-c) * Cl * AtmV) / (8 * kb * T)
+    sigma_e0_exc = sigmae0_vegard * (1 / (A * U))
+    return sigma_e0_exc 
+
 #def binary_resistivity_model(c, U, defect, host, mat_props, dpg, T = 300):
 #    rho_e0_vegard = (1 / mat_props['sigma_endpts'][defect]) * c +\
 #    (1 / mat_props['sigma_endpts'][host]) * (1-c)
