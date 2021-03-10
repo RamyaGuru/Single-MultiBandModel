@@ -279,8 +279,8 @@ def sigma_e0_model(c: list, U, mat_props, dpg, T = 300):
 def fit_binary_U_endpts(data_df, D_key, defect, host, mat_props, dpg, T = 300, p0 = 0):
     Tt = np.array(data_df[D_key])
     At = list(data_df['Sigma_E0'])
-    U, cov = curve_fit(lambda C, U: binary_sigma_e0_model(C, U, defect, host, mat_props, dpg, T), Tt, At,\
-                       p0 = p0, bounds = (0,np.inf), method = 'dogbox')
+    U, cov = curve_fit(lambda C, U: binary_sigma_e0_endpts(C, U, defect, host, mat_props, dpg, T), Tt, At,\
+                       p0 = p0, bounds = (0,np.inf))
     return U[0], cov
 
 

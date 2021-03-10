@@ -30,6 +30,7 @@ import pandas as pd
 import matplotlib as mpl
 import math
 import ternary
+import csv
 
 mpl.rcParams['figure.figsize'] = [5,3] 
 
@@ -262,7 +263,8 @@ if __name__ == '__main__':
     '''
     U_list = fit_binary_U_list(bin_list, mat_props, d_key_list =  ['TiNiSn', 'HfNiSn', 'HfNiSn'], d_h_pairs = [[1,2],[0,2],[0,1]])
     #Why does the Hf-Ti binary have such a huge U parameter?
-    
+#    U_list[0] = 0.0009
+#    U_list[2] = 0.00062
     
     '''
     Print binaries
@@ -311,13 +313,13 @@ if __name__ == '__main__':
     figure, tax = ternary.figure(ax=ax, scale = 100)
     
     tax.heatmap(sig_mu_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
-         cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01}, vmin = 70000, vmax = 110000,\
+         cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01}, vmin = 60000, vmax = 110000,\
          scientific = False)
     
     Tt = [(sigmae0_df['HfNiSn'][i] * 100, sigmae0_df['TiNiSn'][i] * 100, sigmae0_df['ZrNiSn'][i] * 100) for i in  list(sigmae0_df.index)]
     At = sigmae0_df['Sigma_E0']
     tax.scatter(Tt, c = list(At), colormap=plt.cm.get_cmap('Spectral_r', 20),\
-         cmap=plt.cm.get_cmap('Spectral_r', 20), vmin = 70000, vmax = 110000,\
+         cmap=plt.cm.get_cmap('Spectral_r', 20), vmin =60000, vmax = 110000,\
          scientific = False, s = 30, edgecolors = 'k', zorder = 10, clip_on = False)
     
     tax.boundary(linewidth=2.0)
@@ -326,7 +328,7 @@ if __name__ == '__main__':
     tax.left_corner_label('ZrNiSn', position = (0,0, 0))
     tax.right_corner_label('HfNiSn', position = (0.95,0, 0))
     
-#    tax.savefig('XNiSn_mm_sige0_ternary.pdf', bbox_inches = 'tight')
+    tax.savefig('XNiSn_mm_sige0_ternary.pdf', bbox_inches = 'tight')
 
     fig2, ax2 = plt.subplots()
 
@@ -334,8 +336,8 @@ if __name__ == '__main__':
     figure2, tax2 = ternary.figure(ax=ax2, scale = 100)
     
     tax2.heatmap(rho_excess_mu, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
-         cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01},\
-         scientific = False)  
+         cbarlabel=r'excess $\rho_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01},\
+         scientific = True)  
     
     tax2.boundary(linewidth=2.0)
     
@@ -343,10 +345,49 @@ if __name__ == '__main__':
     tax2.left_corner_label('ZrNiSn', position = (0,0, 0))
     tax2.right_corner_label('HfNiSn', position = (0.95,0, 0))
     
+    tax2.savefig('XNiSn_mm_exc_rho.pdf', bbox_inches = 'tight')
+    
     '''
-    trivial U mixing result
+    Plot of the Quality Factor
     '''
-#    trivial_u = trivial_U_mixing(sigmae0_df, 'HfNiSn', 'ZrNiSn', mat_props, 'n', c = [0.1, 0.1, 0.8], T = 300)
+    fig, ax = plt.subplots()
+    ax.axis("off")
+    figure, tax = ternary.figure(ax=ax, scale = 100)
+    
+    kL_df = pd.read_csv('../XNiSn_kL_pred.csv')
+    
+    sig_values = list(sig_mu_dict.values())
+    
+    T = 300
+    
+    B = (kb / e)**2 * 300 * (np.array(sig_values) / np.array(kL_df['kappa_lattice']))
+    
+    
+    B_dict = sig_mu_dict
+    
+    j = 0
+    for k in B_dict.keys():
+        B_dict[k] = B[j]
+        j = j+1
+        
+    tax.heatmap(B_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
+         cbarlabel=r'B',\
+         scientific = False)
+    
+    tax.boundary(linewidth=2.0)
+    
+    tax.top_corner_label('TiNiSn')
+    tax.left_corner_label('ZrNiSn', position = (0,0, 0))
+    tax.right_corner_label('HfNiSn', position = (0.95,0, 0))
+    
+    tax.savefig('../figures/XNiSn_mm_Bfactor.pdf', boox_inches = 'tight')
+
+#    with open('../datafiles/XNiSn_Bfactor_data.csv', 'w') as csvfile:
+#        field_names = ['% (Hf)', '% (Ti)', '% (Zr)', 'BFactor']
+#        writer = csv.DictWriter(csvfile, fieldnames  = field_names)
+#        writer.writeheader()
+#        for k,v in B_dict.items():
+#            writer.writerow({'% (Hf)': k[0], '% (Ti)' : k[1], '% (Zr)' : 100 - (k[0] + k[1]), 'BFactor' : v})
     
 
     

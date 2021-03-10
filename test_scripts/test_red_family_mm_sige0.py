@@ -17,6 +17,15 @@ import numpy as np
 import ternary
 
 
+'''
+constants
+'''
+e = 1.602e-19
+m_e = 9.109e-31
+hbar = 1.045e-34
+kb = 1.38e-23
+
+
 mat_props = {'formula': ['TaFeSb', 'VFeSb', 'NbFeSb'], 'BulkMod': [175E9, 167E9, 146E9],\
              'mpid': ['mp-631267', 'mp-567636', 'mp-9437'],\
              'AtmV' : [1.743E-29, 1.624E-29, 1.772E-29]}
@@ -133,7 +142,7 @@ figure, tax = ternary.figure(ax=ax2, scale = 100)
 ax2.axis("off")
 tax.heatmap(rho_excess_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
      cbarlabel=r'excess $\rho_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01},\
-     scientific = False)
+     scientific = True)
 
 Tt = [(sigmae0_df['TaFeSb'][i] * 100, sigmae0_df['VFeSb'][i] * 100, sigmae0_df['NbFeSb'][i] * 100) for i in  list(sigmae0_df.index)]
 At = sigmae0_df['Sigma_E0']
@@ -143,3 +152,41 @@ tax.boundary(linewidth=2.0)
 tax.top_corner_label('VFeSb')
 tax.left_corner_label('NbFeSb', position = (0,0., 0))
 tax.right_corner_label('TaFeSb', position = (0.95,0, 0))
+
+tax.savefig('XFeSb_mm_exc_rho.pdf', bbox_inches = 'tight')
+
+'''
+Divide by Kappa_L and get quality factor
+'''
+
+fig, ax = plt.subplots()
+ax.axis("off")
+figure, tax = ternary.figure(ax=ax, scale = 100)
+
+kL_df = pd.read_csv('FeXSb_data.csv')
+
+sig_values = list(sig_mu_dict.values())
+
+T = 300
+
+B = (kb / e)**2 * 300 * (np.array(sig_values) / np.array(kL_df['kappa_lattice']))
+
+
+B_dict = sig_mu_dict
+
+j = 0
+for k in B_dict.keys():
+    B_dict[k] = B[j]
+    j = j+1
+    
+tax.heatmap(B_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
+     cbarlabel=r'B',\
+     scientific = False)
+
+tax.boundary(linewidth=2.0)
+
+tax.top_corner_label('VFeSb')
+tax.left_corner_label('NbFeSb', position = (0,0, 0))
+tax.right_corner_label('TaFeSb', position = (0.95,0, 0))
+
+tax.savefig('../figures/XFeSb_mm_Bfactor.pdf')
