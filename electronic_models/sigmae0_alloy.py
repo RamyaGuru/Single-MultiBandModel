@@ -57,6 +57,12 @@ def conductivity_from_sige0(S, sigmae0):
                      ((3 * A / math.pi**2) / (1 + np.exp(5 * (A - 1)))))
     return cond
 
+def sigmae0_eval(cond, S):
+    A = np.abs(S) / (kb / e)
+    sigmae0 = cond * ((np.exp(A - 2) / (1 + np.exp(-5 * (A - 1)))) +\
+                     ((3 * A / math.pi**2) / (1 + np.exp(5 * (A - 1))))) 
+    return sigmae0
+
 def fit_sigmae0(datafile, p0 = 1e6):
     '''
     Instead of using Jeff's formula.. fit using the Fermi itnegrals
@@ -224,6 +230,14 @@ def binary_exc_sigma_e0_endpts(c, U, defect, host, mat_props, dpg, T = 300):
     sigma_e0_exc = sigmae0_vegard * (1 / (A * U))
     return sigma_e0_exc 
 
+def binary_Nordheim_coeff(c, U, defect, host, mat_props, dpg, T = 300):    
+    Cl = mat_props['BulkMod'][defect] * c + mat_props['BulkMod'][host] * (1-c)
+    
+    AtmV = mat_props['AtmV'][defect] * c + mat_props['AtmV'][host] * (1-c)
+    
+    A = (3 * math.pi**2 * c * (1-c) * Cl * AtmV) / (8 * kb * T)
+    return A * U
+
 #def binary_resistivity_model(c, U, defect, host, mat_props, dpg, T = 300):
 #    rho_e0_vegard = (1 / mat_props['sigma_endpts'][defect]) * c +\
 #    (1 / mat_props['sigma_endpts'][host]) * (1-c)
@@ -338,7 +352,28 @@ def naive_sigmae0_data_dict(sig_endpts, n = 100):
             (1-c-d) * sig_endpts[2]# / (1 + (c + d) * (1 - (c + d)))
             k = k+1
         j = j+1
-    return sig_tern    
+    return sig_tern  
+
+def quality_factor_pred(sig_dict, kL_pred_datafile, T = 300):
+    kL_df = pd.read_csv(kL_datafile)
+    sig_values = list(sig_dict.values())
+    
+    B = (kb / e)**2 * T * (np.array(sig_values) / np.array(kL_df['kappa_lattice']))
+    B_dict = sig_dict
+    j = 0
+    for k in B_dict.keys():
+        B_dict[k] = B[j]
+        j = j+1
+    return B_dict
+
+#def quality_factor_exp_data(sig_df, kL_df):
+#    kL_df = kL_df.rename(columns = {'% (Ta)' : 'TaFeSb', '% (Nb)' : 'NbFeSb',\
+#                                    '% (V)' : 'VFeSb'})
+#    kL_df.replace(1e-8, 0)
+#    combined = pd.merge(sig_df, kL_df, on = ['TaFeSb', 'NbFeSb', 'VFeSb']) 
+#        
+#    return
+#    
 
 #def fit_coeff_sigmae0()
 

@@ -100,15 +100,26 @@ eps_zr_ti, kL_zr_ti, kL_full_zr_ti = tt.fit_eps_kL(tt.gammaM_vac, tt.gammaV, zr_
 '''
 Calculate the full ternary
 '''
-kL_tern = tt.run_kL_tern_data_dict(tt.gamma_tern, tt.gamma_tern, eps_zr_ti[0], zr, [hf, ti])
+kL_tern = tt.run_kL_tern_data_dict(tt.gamma_tern, tt.gamma_tern, eps_zr_ti[0], 200, zr, [hf, ti])
 
 fig, ax = plt.subplots()
 ax.axis("off")
 figure, tax = ternary.figure(ax=ax, scale = 100)
 
-tax.heatmap(kL_tern, style = 'h', cmap=plt.cm.get_cmap('viridis_r', 15),
+data_scatter = [(0, 0, 100), (1, 50, 50), (0, 60,40),\
+                (0, 80, 20), (0, 90, 10), (0, 100, 0), (0, 0, 100)]
+
+
+
+kL_scatter = [15.586, 5.96, 5.65, 5.98, 7.79 ,14.691, 11.89]
+
+tax.heatmap(kL_tern, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 15),
              cbarlabel=r'$\kappa$ (W/m/K)',
              vmax=10, vmin=3.4, scientific = False)
+
+tax.scatter(data_scatter, c = kL_scatter, colormap=plt.cm.get_cmap('Spectral_r', 20),\
+     cmap=plt.cm.get_cmap('Spectral_r', 20), vmin = 3.4, vmax = 10,\
+     scientific = False, s = 30, edgecolors = 'k', zorder = 10, clip_on = False)   
     
     
 tax.boundary(linewidth=2.0)
@@ -117,7 +128,8 @@ tax.top_corner_label('TiCoSb')
 tax.left_corner_label('ZrCoSb', position = (0,0.04, 0))
 tax.right_corner_label('HfCoSb', position = (0.95,0.04, 0))
 
-fig.savefig('klemens_model_xcosb.pdf', bbox_inches = 'tight')
+tax.savefig('klemens_model_xcosb.pdf', bbox_inches = 'tight')
+
 
 with open('XCoSb_data.csv', 'w') as csvfile:
     field_names = ['% (Hf)', '% (Ti)', '% (Zr)', 'kappa_lattice']

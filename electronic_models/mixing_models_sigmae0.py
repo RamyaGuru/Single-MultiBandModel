@@ -184,17 +184,14 @@ def muggianu_model_sig_diff(sigmae0_df, bin_list, U_list, mat_props, dpg, c : li
     rho_final = inv_sig_vegard + rho_excess
     return rho_excess, (1 / rho_final)
 
-def muggianu_model_redo(sigmae0_df, bin_list, U_list, mat_props, dpg, c : list, T = 300):
-    c.append((1 + 1e-10) - sum(c))
-#    bin3 = [((1 + c[0] - c[1]) / 2) , ((1 + c[1] - c[0]) / 2)]
-#    bin2 = [((1 + c[0] - c[2]) / 2) , ((1 + c[2] - c[0]) / 2)]
-#    bin1 = [((1 + c[1] - c[2]) / 2) , ((1 + c[2] - c[1]) / 2)]    
-    U_coeff = []
-    for j,k in zip([1,0,0],[2,2,1]):
-        U_coeff.append((4 * c[j] * c[k]) / ((1 + c[j] - c[k]) * (1 + c[k] - c[j])))  
-    U_tern = (U_list[2] * U_coeff[2] + U_list[1] * U_coeff[1] + U_list[0] * U_coeff[0])
-    sigma_tern = sig.sigma_e0_model(c[0:2], U_tern, mat_props, dpg, T)
-    return sigma_tern
+#def redlich_kister_redo(sigmae0_df, bin_list, U_vals, mat_props, dpg, c : list, T = 300):
+#    c.append((1 + 1e-10) - sum(c))
+#    N_tern = 0
+#    for j,k in zip([1,0,0],[2,2,1]):
+#        N_tern = N_coeff + c[1] * c[2] * 
+#    U_tern = (U_list[2] * U_coeff[2] + U_list[1] * U_coeff[1] + U_list[0] * U_coeff[0])
+#    sigma_tern = sig.sigma_e0_model(c[0:2], U_tern, mat_props, dpg, T)
+#    return sigma_tern
 
 def run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, dpg, T = 300, n = 100):
     rho_excess = dict()
@@ -236,8 +233,10 @@ if __name__ == '__main__':
     data_path = '/Users/ramyagurunathan/Documents/PhDProjects/Argonne_TECCA/SigmaE0_values/'
     datafile = data_path + 'XNiSn_gauss_data_purple.csv'
     sigmae0_df = sig.fetch_sigmae0_dataframe(datafile)
-    #Drop band convergence
-    sigmae0_df = sigmae0_df.drop([1,66])
+    #Drop unused endmember value and two unverfiied points
+    sigmae0_full = sigmae0_df.drop([1, 46, 47])
+    #Drop band convergence sample for model
+    sigmae0_df = sigmae0_df.drop([1,46, 47, 66])
     x_val, y_val, z_val = sig.fetch_endmember_values(sigmae0_df)
     
 #    datafile2 = data_path + 'XNiSn_S_and_sigma.csv'
@@ -316,8 +315,9 @@ if __name__ == '__main__':
          cbarlabel=r'$\sigma_{e0}$', cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01}, vmin = 60000, vmax = 110000,\
          scientific = False)
     
-    Tt = [(sigmae0_df['HfNiSn'][i] * 100, sigmae0_df['TiNiSn'][i] * 100, sigmae0_df['ZrNiSn'][i] * 100) for i in  list(sigmae0_df.index)]
-    At = sigmae0_df['Sigma_E0']
+    Tt = [(sigmae0_full['HfNiSn'][i] * 100, sigmae0_full['TiNiSn'][i] * 100,\
+           sigmae0_full['ZrNiSn'][i] * 100) for i in  list(sigmae0_full.index)]
+    At = sigmae0_full['Sigma_E0']
     tax.scatter(Tt, c = list(At), colormap=plt.cm.get_cmap('Spectral_r', 20),\
          cmap=plt.cm.get_cmap('Spectral_r', 20), vmin =60000, vmax = 110000,\
          scientific = False, s = 30, edgecolors = 'k', zorder = 10, clip_on = False)
@@ -346,6 +346,13 @@ if __name__ == '__main__':
     tax2.right_corner_label('HfNiSn', position = (0.95,0, 0))
     
     tax2.savefig('XNiSn_mm_exc_rho.pdf', bbox_inches = 'tight')
+    
+    with open('../datafiles/XNiSn_sige0_mm_data.csv', 'w') as csvfile:
+        field_names = ['% (Hf)', '% (Ti)', '% (Zr)', 'Sigma_e0']
+        writer = csv.DictWriter(csvfile, fieldnames  = field_names)
+        writer.writeheader()
+        for k,v in sig_mu_dict.items():
+            writer.writerow({'% (Hf)': k[0], '% (Ti)' : k[1], '% (Zr)' : 100 - (k[0] + k[1]), 'Sigma_e0' : v})
     
     '''
     Plot of the Quality Factor
@@ -382,12 +389,12 @@ if __name__ == '__main__':
     
     tax.savefig('../figures/XNiSn_mm_Bfactor.pdf', boox_inches = 'tight')
 
-#    with open('../datafiles/XNiSn_Bfactor_data.csv', 'w') as csvfile:
-#        field_names = ['% (Hf)', '% (Ti)', '% (Zr)', 'BFactor']
-#        writer = csv.DictWriter(csvfile, fieldnames  = field_names)
-#        writer.writeheader()
-#        for k,v in B_dict.items():
-#            writer.writerow({'% (Hf)': k[0], '% (Ti)' : k[1], '% (Zr)' : 100 - (k[0] + k[1]), 'BFactor' : v})
+    with open('../datafiles/XNiSn_Bfactor_mm_data.csv', 'w') as csvfile:
+        field_names = ['% (Hf)', '% (Ti)', '% (Zr)', 'BFactor']
+        writer = csv.DictWriter(csvfile, fieldnames  = field_names)
+        writer.writeheader()
+        for k,v in B_dict.items():
+            writer.writerow({'% (Hf)': k[0], '% (Ti)' : k[1], '% (Zr)' : 100 - (k[0] + k[1]), 'BFactor' : v})
     
 
     

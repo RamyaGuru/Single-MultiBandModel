@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import ternary
+import csv
 
 
 '''
@@ -70,7 +71,6 @@ Fit separate U values
 '''
 U_list = mms.fit_binary_U_list(bin_list, mat_props, d_key_list =  ['VFeSb', 'TaFeSb', 'TaFeSb'], d_h_pairs = [[1,2],[0,2],[0,1]])
 
-
 '''
 Print binary curves
 '''
@@ -108,13 +108,13 @@ Muggianu Result
 '''
 #Look at the endpoints
 c_Ti = [0.01, 0.98]
-sig_mu_Hf = mms.muggianu_model(sigmae0_df, bin_list, U_list, mat_props, 'n', c_Ti, T = 300)
+sig_mu_Hf = mms.muggianu_model(sigmae0_df, bin_list, U_list, mat_props, 'p', c_Ti, T = 300)
 
 '''
 Plot ternary for muggianu result
 '''
 sig_data_dict = mms.convert_data_df_to_dict(sigmae0_df, 'TaFeSb', 'VFeSb')
-rho_excess_dict, sig_mu_dict = mms.run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, 'n', T = 300, n = 100)
+rho_excess_dict, sig_mu_dict = mms.run_sigmae0_muggianu_dict(sigmae0_df, bin_list, U_list, mat_props, 'p', T = 300, n = 100)
 fig, ax = plt.subplots()
 ax.axis("off")
 figure, tax = ternary.figure(ax=ax, scale = 100)
@@ -155,6 +155,13 @@ tax.right_corner_label('TaFeSb', position = (0.95,0, 0))
 
 tax.savefig('XFeSb_mm_exc_rho.pdf', bbox_inches = 'tight')
 
+with open('XFeSb_sige0_mm_data.csv', 'w') as csvfile:
+    field_names = ['% (Ta)', '% (V)', '% (Nb)', 'Sigma_e0']
+    writer = csv.DictWriter(csvfile, fieldnames  = field_names)
+    writer.writeheader()
+    for k,v in sig_mu_dict.items():
+        writer.writerow({'% (Ta)': k[0], '% (V)' : k[1], '% (Nb)' : 100 - (k[0] + k[1]), 'Sigma_e0' : v})
+
 '''
 Divide by Kappa_L and get quality factor
 '''
@@ -189,4 +196,12 @@ tax.top_corner_label('VFeSb')
 tax.left_corner_label('NbFeSb', position = (0,0, 0))
 tax.right_corner_label('TaFeSb', position = (0.95,0, 0))
 
-tax.savefig('../figures/XFeSb_mm_Bfactor.pdf')
+#tax.savefig('../figures/XFeSb_mm_Bfactor.pdf')
+
+with open('XFeSb_Bfactor_mm_data.csv', 'w') as csvfile:
+    field_names = ['% (Ta)', '% (V)', '% (Nb)', 'BFactor']
+    writer = csv.DictWriter(csvfile, fieldnames  = field_names)
+    writer.writeheader()
+    for k,v in B_dict.items():
+        writer.writerow({'% (Ta)': k[0], '% (V)' : k[1], '% (Nb)' : 100 - (k[0] + k[1]), 'BFactor' : v})
+

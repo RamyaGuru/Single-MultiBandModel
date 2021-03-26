@@ -332,7 +332,7 @@ def run_kL_tern_data_dict(Mfunc, Rfunc, eps, propA, propB : list, n = 10):
 Plot Results (V,Nb,Ta)CoSn
 '''
 #plt.figure()
-kL_tern = run_kL_tern_data_dict(gamma_tern, gamma_tern, 0, v, [ta, nb])
+kL_tern = run_kL_tern_data_dict(gamma_tern, gamma_tern, 0, v, [ta, nb], 200)
 #plt.plot(np.linspace(1e-10,9.9999999e-1,100), kL_VTa_tern, color = 'xkcd:tree green')
 #plt.ylabel(r'$\kappa_L$ (W/m/K)')
 #plt.xlabel(r'FeV$_{1-x}$Ta$_x$Sb')
@@ -341,13 +341,20 @@ kL_tern = run_kL_tern_data_dict(gamma_tern, gamma_tern, 0, v, [ta, nb])
 '''
 Generate data for a ternary diagram
 '''
+data_scatter = [(0, 0, 100), (0, 100, 0), (100, 0, 0), (60, 40, 0)]
+kL_scatter = [14.45, 7.72, 5.94, 4.8]
+
 fig, ax = plt.subplots()
 ax.axis("off")
 figure, tax = ternary.figure(ax=ax, scale = 100)
 
-tax.heatmap(kL_tern, style = 'h', cmap=plt.cm.get_cmap('viridis_r', 15),
+tax.heatmap(kL_tern, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),
              cbarlabel=r'$\kappa$ (W/m/K)',
              vmax=10.0, vmin=3.5, scientific = False)
+
+tax.scatter(data_scatter, c = kL_scatter, colormap=plt.cm.get_cmap('Spectral_r', 20),\
+     cmap=plt.cm.get_cmap('Spectral_r', 20), vmin = 3.5, vmax = 10,\
+     scientific = False, s = 30, edgecolors = 'k', zorder = 10, clip_on = False)   
     
     
 tax.boundary(linewidth=2.0)
@@ -356,11 +363,11 @@ tax.top_corner_label('NbCoSn')
 tax.left_corner_label('VCoSn', position = (0,0.04, 0))
 tax.right_corner_label('TaCoSn', position = (0.95,0.04, 0))
 
-fig.savefig('klemens_model_xcosn.pdf', bbox_inches = 'tight')
+tax.savefig('klemens_model_xcosn.pdf', bbox_inches = 'tight')
 
 
 
-with open('XNbSb_data.csv', 'w') as csvfile:
+with open('XCoSn_data.csv', 'w') as csvfile:
     field_names = ['% (Ta)', '% (Nb)', '% (V)', 'kappa_lattice']
     writer = csv.DictWriter(csvfile, fieldnames  = field_names)
     writer.writeheader()
