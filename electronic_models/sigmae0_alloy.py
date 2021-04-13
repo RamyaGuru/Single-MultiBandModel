@@ -65,23 +65,37 @@ def sigmae0_eval(cond, S):
 
 def fit_sigmae0(datafile, p0 = 1e6):
     '''
-    Instead of using Jeff's formula.. fit using the Fermi itnegrals
+    Fit sigmae0 to the Seebeck and conductivity data
     '''
     data_df = pd.read_csv(datafile)
     grps = data_df.groupby(by = [data_df.columns[1], data_df.columns[2]])
-    split_comp = [grps.get_group(x) for x in grps.groups]
+    split_comp = [grps.get_group(x) for x in grps.groups] #split by composition
     sig_df_list = []
-    for data in split_comp:
+    sig_alt = []
+    pf_list = []
+    for data in split_comp: #loop over all compositions
         sig = data['Sigma (S/m)']
         S = data['S (V/K)']
         sigmaE0, cov = curve_fit(lambda s, sigmaE0 : conductivity_from_sige0(s, sigmaE0), S, sig,\
                             p0 = p0, bounds = (0.1, np.inf), method = 'dogbox')
-        
-#    sigmae0 = sig * ((np.exp(A - 2) / (1 + np.exp(-5 * (A - 1)))) +\
-#                     ((3 * A / math.pi**2) / (1 + np.exp(5 * (A - 1)))))
+        sigE0_alt = sigmae0_eval(sig, S)
+        pf = S ** 2 * sig
+        '''
+            FOR ALESSANDRO:
+            WHAT THE ABOVE LINE OF CODE DOES: Fits a value for sigmaE0 given input data (Seebeck) and output data (conductivity)
+            lambda --> "lambda" functions in Python are just a different syntax for writing a function, and it works
+            well with curve fit. Lots of resources on Google for "lambda" functions, but the general format is "lambda arguments : function"
+            conductivity_from_sige0 --> a function that calculates conductivity when given a sigmaE0 value
+            S, sig : Seebeck data and conductivity data
+            p0 : initial guess for sigE0
+            bounds : restricting sigE0 to be positive 
+            method : just the minimization method used by PYthon, don't need to worry about this
+        '''
         data['Sigma_E0'] = np.ones(len(sig)) * sigmaE0
         sig_df_list.append(data)
-    return sig_df_list
+        pf_list.append(pf)
+        sig_alt.append(sigE0_alt)
+    return sig_df_list, sig_alt, pf_list
 
 
 def fetch_sigmae0_dataframe(datafile):

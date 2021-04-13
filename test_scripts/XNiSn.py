@@ -9,6 +9,8 @@ XNiSn Family
 
 Need to be aware of the huge miscibility gap
 """
+import sys
+sys.path.append('../thermal_models/')
 import ternary_tcond as tt
 import numpy as np
 import matplotlib.pyplot as plt
@@ -88,15 +90,18 @@ eps_zr_ti, kL_zr_ti, kL_full_zr_ti = tt.fit_eps_kL(tt.gammaM_vac, tt.gammaV, zr_
 '''
 Calculate the full ternary
 '''
-kL_tern = tt.run_kL_tern_data_dict(tt.gamma_tern, tt.gamma_tern, eps_ti_hf[0], 200, ti, [hf, zr])
+kL_tern = tt.run_kL_tern_data_dict(tt.gamma_tern, tt.gamma_tern, eps_ti_hf[0], 100, zr, [hf, ti]) #Hf, Ti, Zr
 
 
 '''
 Generate data for a ternary diagram
 '''
-data_scatter = [(0, 0, 100), (5, 0, 99.5),\
-                (100, 0, 0), (0, 100, 0),\
-                (50, 50, 0), (0, 50, 50)]
+data_scatter = [(0, 100, 0), (5, 95, 0),\
+                (100, 0, 0), (0, 0, 100),\
+                (50, 0, 50), (0, 50, 50)]
+
+
+
 kL_scatter = [6.95, 5.21, 8.25, 8.75, 5, 5.25]
 
 fig, ax = plt.subplots()
@@ -114,13 +119,13 @@ tax.scatter(data_scatter, c = kL_scatter, colormap=plt.cm.get_cmap('Spectral_r',
     
 tax.boundary(linewidth=2.0)
 
-tax.top_corner_label('ZrNiSn')
-tax.left_corner_label('TiNiSn', position = (0,0.04, 0))
+tax.top_corner_label('TiNiSn')
+tax.left_corner_label('ZrNiSn', position = (0,0.04, 0))
 tax.right_corner_label('HfNiSn', position = (0.95,0.04, 0))
 
 tax.savefig('klemens_model_xnisn_old.pdf', bbox_inches = 'tight')
 
-with open('XNiSn_data.csv', 'w') as csvfile:
+with open('XNiSn_kL_predictions.csv', 'w') as csvfile:
     field_names = ['% (Hf)', '% (Ti)', '% (Zr)', 'kappa_lattice']
     writer = csv.DictWriter(csvfile, fieldnames  = field_names)
     writer.writeheader()

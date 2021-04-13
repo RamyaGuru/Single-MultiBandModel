@@ -230,7 +230,7 @@ if __name__ == '__main__':
     '''
     Get sigmae0_df
     '''
-    data_path = '/Users/ramyagurunathan/Documents/PhDProjects/Argonne_TECCA/SigmaE0_values/'
+    data_path = '/Users/ramyagurunathan/Documents/PhDProjects/Argonne_TECCA/SuchiGPRCode/input_data/'
     datafile = data_path + 'XNiSn_gauss_data_purple.csv'
     sigmae0_df = sig.fetch_sigmae0_dataframe(datafile)
     #Drop unused endmember value and two unverfiied points
@@ -240,10 +240,10 @@ if __name__ == '__main__':
     x_val, y_val, z_val = sig.fetch_endmember_values(sigmae0_df)
     
 #    datafile2 = data_path + 'XNiSn_S_and_sigma.csv'
-#    sige0_list = sig.fit_sigmae0(datafile2)
-#    for item in sige0_list:
-#        sigmae0_df = sigmae0_df.append(item.iloc[0])
-#        
+#    sige0_list, sige0_alt, pf_list = sig.fit_sigmae0(datafile2)
+#
+#    datafile3 = data_path + 'XNiSn_S_sigma_Sakurada.csv'
+#    sige0_list, sige0_alt, pf_list = sig.fit_sigmae0(datafile)
     
     '''
     Fit coefficients
@@ -361,7 +361,7 @@ if __name__ == '__main__':
     ax.axis("off")
     figure, tax = ternary.figure(ax=ax, scale = 100)
     
-    kL_df = pd.read_csv('../XNiSn_kL_pred.csv')
+    kL_df = pd.read_csv('../test_scripts/XNiSn_kL_predictions.csv')
     
     sig_values = list(sig_mu_dict.values())
     
@@ -376,9 +376,27 @@ if __name__ == '__main__':
     for k in B_dict.keys():
         B_dict[k] = B[j]
         j = j+1
-        
+    
+    '''
+    Get Quality Factor Data
+    SigmaE0 Papers: Kim2007 Intermetallics, Schwall Thesis, Yu 2009 Acta, 
+    
+    '''
+    comp_data = [(5, 95, 0),\
+                 (60, 0 ,40), (70, 0 ,30), (0, 50, 50), (10, 0 ,90), (80, 0, 20), (100, 0, 0)]
+    kL_paper = ['Kim2006',\
+                'Yu2009', 'Yu2009', 'Downie2014', 'Chen2013', 'Liu2015', 'Liu2015']
+    kL_data = np.array([5.21,3.30, 4.0, 4.0, 3.3, 4.6, 6.5])
+    
+    B_data = (kb / e)**2 * 300 * np.array([116606, 85158, 72348, 63378, 107439,\
+             93747, 85915]) / kL_data
+    
+    tax. scatter(comp_data, c = list(B_data), colormap=plt.cm.get_cmap('Spectral_r', 20),\
+         cmap=plt.cm.get_cmap('Spectral_r', 20), vmin = 0.025, vmax = 0.05,\
+         scientific = False, s = 30, edgecolors = 'k', zorder = 10, clip_on = False)
+    
     tax.heatmap(B_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
-         cbarlabel=r'B',\
+         cbarlabel=r'B', vmin = 0.025, vmax = 0.05,\
          scientific = False)
     
     tax.boundary(linewidth=2.0)

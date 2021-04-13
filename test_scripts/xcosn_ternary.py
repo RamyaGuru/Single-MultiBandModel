@@ -78,7 +78,7 @@ TaCoSn Material Properties: Li ACS Appl. Mater. Interfaces
 ta = {
       'atmMass' :[180.95, 58.933 ,118.71],
       'atmRadius': [.86, .54, 0.69],
-      'atmV': ( 5.948E-10)**3 / 12,
+      'atmV': (5.948E-10)**3 / 12,
       'natoms': 3,
       'stoich': [1,1,1],
       'k0' : 5.94, #W/o the Titanium doping
@@ -371,6 +371,6 @@ with open('XCoSn_data.csv', 'w') as csvfile:
     field_names = ['% (Ta)', '% (Nb)', '% (V)', 'kappa_lattice']
     writer = csv.DictWriter(csvfile, fieldnames  = field_names)
     writer.writeheader()
-    for k,v in kL_tern.items():
-        writer.writerow({'% (Ta)': k[0], '% (Nb)' : k[1], '% (V)' : 100 - (k[0] + k[1]), 'kappa_lattice' : v})
+    for k,val in kL_tern.items():
+        writer.writerow({'% (Ta)': k[0], '% (Nb)' : k[1], '% (V)' : 100 - (k[0] + k[1]), 'kappa_lattice' : val})
     
