@@ -91,6 +91,12 @@ def kL_tot(c, eps, Mfunc, Rfunc, propA, propB):
     kL = kL_from_gamma(gamma, propA, propB, c)
     return kL
 
+def kL_tot_gamma(c, eps, Mfunc, Rfunc, propA, propB):
+    gamma = Mfunc(propA['stoich'], propA['atmMass'], propB['atmMass'], c) +\
+    eps * Rfunc(propA['stoich'], propA['atmRadius'], propB['atmRadius'], c)
+    kL = kL_from_gamma(gamma, propA, propB, c)
+    return kL, gamma
+
 def fit_eps_kL(Mfunc, Rfunc, data, propA, propB):
     data = data[data[:,0].argsort()]
     eps, cov = curve_fit(lambda c, eps:\
@@ -116,6 +122,14 @@ def run_kL(Mfunc, Rfunc, eps, propA, propB):
         j = j+1
     return kL_full
 
+def run_kL_gamma(Mfunc, Rfunc, eps, propA, propB):
+    kL_full = np.zeros(100)
+    gamma_full = np.zeros(100)
+    j = 0
+    for d in np.linspace(1e-10,9.9999999e-1,100):
+        kL_full[j], gamma_full[j] = kL_tot_gamma(d, eps, Mfunc, Rfunc, propA, propB)
+        j = j+1
+    return kL_full, gamma_full
 '''
 Ternary Thermal Conductivity
 '''
@@ -140,10 +154,9 @@ def gamma_tern(stoich, mass, subst : list, c : list):
 
 def kL_from_gamma_tern(gamma, propA, propB : list, c : list):
     defect_conc = sum(c)
-    host_conc = (1 + 1e-10) - defect_conc
-    atmV = (host_conc) * propA['atmV'] +  sum(c[i] * propB[i]['atmV'] for i in range(len(c)))
-    vs = (host_conc) * propA['vs'] +  sum(c[i] * propB[i]['vs'] for i in range(len(c)))
-    k0 = (host_conc) * propA['k0'] +  sum(c[i] * propB[i]['k0'] for i in range(len(c)))
+    atmV = (1 - defect_conc) * propA['atmV'] +  sum(c[i] * propB[i]['atmV'] for i in [0,1]) #hard-coded for now...
+    vs = (1 - defect_conc) * propA['vs'] +  sum(c[i] * propB[i]['vs'] for i in [0,1])
+    k0 = (1 - defect_conc) * propA['k0'] +  sum(c[i] * propB[i]['k0'] for i in [0,1])
     prefix = (6**(1/3)/2)*(pi**(5/3)/kB)*(atmV**(2/3)/vs)
     u = (prefix * gamma * k0)**(1/2)
     kL = k0*np.arctan(u)/u
@@ -170,6 +183,42 @@ def kL_tot_tern_gamma(C, eps, Mfunc, Rfunc, propA, propB : list):
     except:
         pass
     return kL, gamma 
+
+
+'''
+Ternary Thermal Conductivity: Muggianu Model
+Think I would need to apply this to the Gamma calculation
+'''
+
+def muggianu_model_gamma(c, eps_list, Mfunc, Rfunc, propA, propB : list):
+    '''
+    propA: nb, c[0]
+    
+    propB[0] : ta, c[1]
+    
+    propB[1] : v, c[2]
+    '''
+    c.insert(0, (1 + 1e-10) - sum(c))
+    bin1 = [((1 + c[0] - c[1]) / 2) , ((1 + c[1] - c[0]) / 2)]
+    bin2 = [((1 + c[0] - c[2]) / 2) , ((1 + c[2] - c[0]) / 2)]
+    bin3 = [((1 + c[1] - c[2]) / 2) , ((1 + c[2] - c[1]) / 2)]
+    #should probably apply this to Gamma?
+    gamma1 = Mfunc(propA['stoich'], propA['atmMass'], propB[0]['atmMass'], bin1[0]) +\
+    eps_list[0] * Rfunc(propA['stoich'], propA['atmRadius'], propB[0]['atmRadius'], bin1[0])
+    gamma2 = Mfunc(propA['stoich'], propA['atmMass'], propB[1]['atmMass'], bin2[0]) +\
+    eps_list[1] * Rfunc(propA['stoich'], propA['atmRadius'], propB[1]['atmRadius'], bin2[0])
+    gamma3 = Mfunc(propA['stoich'], propB[0]['atmMass'], propB[1]['atmMass'], bin3[0]) +\
+    eps_list[2] * Rfunc(propA['stoich'], propB[0]['atmRadius'], propB[1]['atmRadius'], bin3[0])
+    comp_coeff = []
+    for j,k in zip([0,0,1],[1,1,2]):
+        comp_coeff.append((4 * c[j] * c[k]) / ((1 + c[j] - c[k]) * (1 + c[k] - c[j])))
+    gamma_tern = (gamma3 * comp_coeff[2] + gamma2 * comp_coeff[1] + gamma1 * comp_coeff[0])
+    return gamma_tern
+
+def kL_tot_tern_muggianu(c : list, eps_list, Mfunc, Rfunc, propA, propB : list):
+    gamma_tern = muggianu_model_gamma(c, eps_list, Mfunc, Rfunc, propA, propB)
+    kL = kL_from_gamma_tern(gamma_tern, propA, propB, c)
+    return kL
 
 
 def fit_eps_kL_tern(Mfunc, Rfunc, Tt, At, propA, propB, p0 = 0):
@@ -252,5 +301,19 @@ def run_kL_cov_tern_data_dict(Mfunc, Rfunc, eps, eps_cov, n, propA, propB : list
             k = k+1
         j = j+1
     return kL_full, kL_std_dev
+
+
+def run_kL_tern_data_dict_muggianu(Mfunc, Rfunc, eps, n, propA, propB : list):
+    kL_full = dict()
+    first = 1e-10
+    last = 9.9999999999999e-1
+    j = 0
+    for c in np.arange(first,1,(last - first) / n):
+        k = 0
+        for d in np.arange(first, 1 - c, (last - first) / n):
+            kL_full[(c*100,d*100)] = kL_tot_tern_muggianu([c,d], eps, Mfunc, Rfunc, propA, propB)
+            k = k+1
+        j = j+1
+    return kL_full
 
 

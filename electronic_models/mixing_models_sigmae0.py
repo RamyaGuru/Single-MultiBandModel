@@ -32,8 +32,8 @@ import math
 import ternary
 import csv
 
-mpl.rcParams['figure.figsize'] = [5,3] 
-
+mpl.rcParams['figure.figsize'] = [8,6] 
+mpl.rcParams['font.size'] = 14
 
 def split_binary_data(sig_df):
     '''
@@ -324,9 +324,9 @@ if __name__ == '__main__':
     
     tax.boundary(linewidth=2.0)
     
-    tax.top_corner_label('TiNiSn')
-    tax.left_corner_label('ZrNiSn', position = (0,0, 0))
-    tax.right_corner_label('HfNiSn', position = (0.95,0, 0))
+    tax.top_corner_label('TiNiSn', position = (-0.08,1.15, 0))
+    tax.left_corner_label('ZrNiSn', position = (0,0.04, 0))
+    tax.right_corner_label('HfNiSn', position = (0.95,0.04, 0))
     
     tax.savefig('XNiSn_mm_sige0_ternary.pdf', bbox_inches = 'tight')
 
@@ -341,9 +341,9 @@ if __name__ == '__main__':
     
     tax2.boundary(linewidth=2.0)
     
-    tax2.top_corner_label('TiNiSn')
-    tax2.left_corner_label('ZrNiSn', position = (0,0, 0))
-    tax2.right_corner_label('HfNiSn', position = (0.95,0, 0))
+    tax2.top_corner_label('TiNiSn', position = (-0.08,1.15, 0))
+    tax2.left_corner_label('ZrNiSn', position = (0,0.04, 0))
+    tax2.right_corner_label('HfNiSn', position = (0.95,0.04, 0))
     
     tax2.savefig('XNiSn_mm_exc_rho.pdf', bbox_inches = 'tight')
     
@@ -391,19 +391,19 @@ if __name__ == '__main__':
     B_data = (kb / e)**2 * 300 * np.array([116606, 85158, 72348, 63378, 107439,\
              93747, 85915]) / kL_data
     
-    tax. scatter(comp_data, c = list(B_data), colormap=plt.cm.get_cmap('Spectral_r', 20),\
+    tax.scatter(comp_data, c = list(B_data), colormap=plt.cm.get_cmap('Spectral_r', 20),\
          cmap=plt.cm.get_cmap('Spectral_r', 20), vmin = 0.025, vmax = 0.05,\
-         scientific = False, s = 30, edgecolors = 'k', zorder = 10, clip_on = False)
+         scientific = False, s = 50, edgecolors = 'k', zorder = 10, clip_on = False)
     
     tax.heatmap(B_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
-         cbarlabel=r'B', vmin = 0.025, vmax = 0.05,\
+         cbarlabel=r'B', vmin = 0.025, vmax = 0.05,cb_kwargs = {'shrink' : 0.8, 'pad' : 0.01},\
          scientific = False)
     
     tax.boundary(linewidth=2.0)
     
-    tax.top_corner_label('TiNiSn')
-    tax.left_corner_label('ZrNiSn', position = (0,0, 0))
-    tax.right_corner_label('HfNiSn', position = (0.95,0, 0))
+    tax.top_corner_label('TiNiSn', position = (-0.08,1.15, 0))
+    tax.left_corner_label('ZrNiSn', position = (0,0.04, 0))
+    tax.right_corner_label('HfNiSn', position = (0.95,0.04, 0))
     
     tax.savefig('../figures/XNiSn_mm_Bfactor.pdf', boox_inches = 'tight')
 

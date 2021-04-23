@@ -119,7 +119,7 @@ tax.scatter(data_scatter, c = kL_scatter, colormap=plt.cm.get_cmap('Spectral_r',
     
 tax.boundary(linewidth=2.0)
 
-tax.top_corner_label('TiNiSn')
+tax.top_corner_label('TiNiSn', position = (-0.08,1.15, 0))
 tax.left_corner_label('ZrNiSn', position = (0,0.04, 0))
 tax.right_corner_label('HfNiSn', position = (0.95,0.04, 0))
 

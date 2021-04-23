@@ -75,7 +75,7 @@ tax.scatter(Tt, c = list(At), colormap=plt.cm.get_cmap('Spectral_r', 20),\
 
 tax.boundary(linewidth=2.0)
 
-tax.top_corner_label('VFeSb')
+tax.top_corner_label('VFeSb', position = (-0.08,1.15, 0))
 tax.left_corner_label('NbFeSb', position = (0,0.04, 0))
 tax.right_corner_label('TaFeSb', position = (0.95,0.04, 0))
 
@@ -89,6 +89,7 @@ with open('XFeSb_sige0_data.csv', 'w') as csvfile:
 '''
 Divide by Kappa_L and get quality factor
 '''
+
 
 fig, ax = plt.subplots()
 ax.axis("off")
@@ -116,9 +117,11 @@ tax.heatmap(B_dict, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 20),\
 
 tax.boundary(linewidth=2.0)
 
-tax.top_corner_label('VFeSb')
+tax.top_corner_label('VFeSb', position = (-0.08,1.15, 0))
 tax.left_corner_label('NbFeSb', position = (0,0.04, 0))
 tax.right_corner_label('TaFeSb', position = (0.95,0.04, 0))
+
+tax.savefig('XFeSb_Bfactor.pdf', bbox_inches = 'tight')
 
 with open('XFeSb_Bfactor_data.csv', 'w') as csvfile:
     field_names = ['% (Ta)', '% (V)', '% (Nb)', 'BFactor']
