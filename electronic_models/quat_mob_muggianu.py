@@ -58,13 +58,27 @@ binary_inv_mob_list = [PbSe_SnSe_i, SnTe_SnSe_i, PbTe_SnSe_i, SnTe_PbSe_i, PbTe_
 if __name__ == '__main__':
     C_list = qrm.fit_Nord_coeff(c_list, binary_inv_mob_list)
     C_list[0] = 0
-    quat_inv_mob = qrm.run_quat_rho(qrm.Nordheim_exc_resistivity,\
+    exp_quat = np.loadtxt('../datafiles/quat_int_mob.txt', delimiter = ',')
+    quat_inv_mob, comp_array = qrm.run_quat_rho(qrm.Nordheim_exc_resistivity,\
                                     qrm.Nordheim_vegard_resistivity, C_list, binary_inv_mob_list, 10)
     
-    fig,ax = plt.subplots()
-    plt.matshow(1/quat_inv_mob, cmap = plt.cm.get_cmap('rainbow'), vmin = 0, vmax = 800)
-    cbar = plt.colorbar()        
+    plt.figure()
+    plt.matshow(exp_quat, cmap = plt.cm.get_cmap('rainbow'), vmin = 0, vmax = 800)
     
+    plt.figure()
+    plt.matshow(1/quat_inv_mob, cmap = plt.cm.get_cmap('rainbow'), vmin = 0, vmax = 800)
+    cbar = plt.colorbar() 
+    
+    dev = exp_quat - (1 / quat_inv_mob)
+    dos_change = qrm.deviation_from_alloy_model(exp_quat,(1 / quat_inv_mob))
+
+    plt.figure()
+    plt.matshow(dev, cmap = plt.cm.get_cmap('rainbow'))
+    cbar = plt.colorbar()            
+    
+    plt.figure()
+    plt.matshow(dos_change, cmap = plt.cm.get_cmap('rainbow'))
+    cbar = plt.colorbar()       
     
     '''
     Print Binaries

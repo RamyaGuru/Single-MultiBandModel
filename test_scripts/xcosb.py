@@ -97,10 +97,13 @@ zr_ti = np.array(zr_ti)
 
 eps_zr_ti, kL_zr_ti, kL_full_zr_ti = tt.fit_eps_kL(tt.gammaM_vac, tt.gammaV, zr_ti, zr, ti)
 
+plt.plot(np.linspace(0, 1, 100), kL_full_zr_ti)
+
 '''
 Calculate the full ternary
 '''
-kL_tern = tt.run_kL_tern_data_dict(tt.gamma_tern, tt.gamma_tern, eps_zr_ti[0], 200, zr, [hf, ti])
+eps_cov = 0
+kL_tern, gamma_full = tt.run_kL_cov_tern_data_dict(tt.gamma_tern, tt.gamma_tern, eps_zr_ti, eps_cov, 200, zr, [hf, ti])
 
 fig, ax = plt.subplots()
 ax.axis("off")
@@ -131,9 +134,48 @@ tax.right_corner_label('HfCoSb', position = (0.95,0.04, 0))
 tax.savefig('klemens_model_xcosb.pdf', bbox_inches = 'tight')
 
 
+fig, ax = plt.subplots()
+ax.axis("off")
+figure, tax = ternary.figure(ax=ax, scale = 100)
+
+tax.heatmap(gamma_full, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 15),
+             cbarlabel=r'$\Gamma$',
+             scientific = False)
+
+
+
 with open('XCoSb_data.csv', 'w') as csvfile:
     field_names = ['% (Hf)', '% (Ti)', '% (Zr)', 'kappa_lattice']
     writer = csv.DictWriter(csvfile, fieldnames  = field_names)
     writer.writeheader()
     for k,v in kL_tern.items():
         writer.writerow({'% (Hf)': k[0], '% (Ti)' : k[1], '% (Zr)' : 100 - (k[0] + k[1]), 'kappa_lattice' : v})
+        
+
+'''
+Muggianu Model for Gamma
+'''
+eps_list = [eps_zr_ti[0], eps_zr_ti[0], eps_zr_ti[0]]
+kL_tern_mugg, gamma_mugg = tt.run_kL_tern_data_dict_muggianu(tt.gammaM_vac, tt.gammaV, eps_list, 200, zr, [hf, ti])
+
+fig, ax = plt.subplots()
+ax.axis("off")
+figure, tax = ternary.figure(ax=ax, scale = 100)
+
+tax.heatmap(kL_tern_mugg, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 15),
+             cbarlabel=r'$\kappa$ (W/m/K)',
+             vmax=10, vmin=3.4, scientific = False)
+
+tax.boundary(linewidth=2.0)
+
+tax.top_corner_label('TiCoSb')
+tax.left_corner_label('ZrCoSb', position = (0,0.04, 0))
+tax.right_corner_label('HfCoSb', position = (0.95,0.04, 0))
+
+fig, ax = plt.subplots()
+ax.axis("off")
+figure, tax = ternary.figure(ax=ax, scale = 100)
+
+tax.heatmap(gamma_mugg, style = 'h', cmap=plt.cm.get_cmap('Spectral_r', 15),
+             cbarlabel=r'$\kappa$ (W/m/K)',
+             scientific = False)

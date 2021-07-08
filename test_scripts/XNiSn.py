@@ -72,6 +72,7 @@ ti_hf[1] = [6.95, 5.21, 8.25]
 ti_hf = np.array(ti_hf)
 
 eps_ti_hf, kL_ti_hf, kL_full_ti_hf = tt.fit_eps_kL(tt.gammaM_vac, tt.gammaV, ti_hf, ti, hf)
+plt.plot(np.linspace(0,1,100), kL_full_ti_hf)
 #Source: Zou J.Appl.Phys. 2013
 zr_hf = [[],[]]
 zr_hf[0] = [1e-10, 0.5, 9.999999e-1] #Hf site fraction
